@@ -8,6 +8,40 @@ import cupyx.scipy.ndimage  # for filters
 from numba import cuda
 import numpy.typing as npt
 
+def generate_inverse_image(image, vx, vy, vz, use_gpu: bool = True) -> np.ndarray:
+    """ Uses the displacements to transform the image
+
+    This transformed image can then be overlaid over the actual image to verify the quality of the displacements.
+
+    Args:
+        image (np.ndarray): File path to save the displacements. The extension type should be *.npz
+        vx (np.ndarray): Array containing the displacements in the x direction
+        vy (np.ndarray): Array containing the displacements in the y direction
+        vz (np.ndarray): Array containing the displacements in the z direction
+        use_gpu (bool): Option to run some part of the procedure on the gpu
+
+    Returns:
+        inverse_image (np.ndarray): transformed image using the displacemennt field
+    """
+    # image should be the first image that is used for the optical flow calculations
+    map_x_inverse, map_y_inverse, map_z_inverse, distance_total = inverse(vx, vy, vz)
+
+    map_x_inverse = map_x_inverse / (distance_total + 1e-12)
+    map_y_inverse = map_y_inverse / (distance_total + 1e-12)
+    map_z_inverse = map_z_inverse / (distance_total + 1e-12)
+
+    if use_gpu:
+        inverse_image_gpu = cupyx.scipy.ndimage.map_coordinates(cp.asarray(image),
+                                                                cp.array([map_z_inverse, map_y_inverse, map_x_inverse]),
+                                                                mode="mirror")
+        inverse_image = inverse_image_gpu.get()
+    else:
+        inverse_image = scipy.ndimage.map_coordinates(image,
+                                                      np.array([map_z_inverse, map_y_inverse, map_x_inverse]),
+                                                      mode="mirror")
+
+    return inverse_image
+
 def gaussian_kernel_1d(sigma: float, radius: int = None) -> npt.ArrayLike:
     """ Generates a 1d kernel that can be used to perform Gaussian smoothing
 
