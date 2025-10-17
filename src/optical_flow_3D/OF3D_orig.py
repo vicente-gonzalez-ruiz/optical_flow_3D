@@ -1,4 +1,4 @@
-import typing
+from typing import Tuple, List
 import cupy as cp
 import numpy as np
 from tqdm import tqdm
