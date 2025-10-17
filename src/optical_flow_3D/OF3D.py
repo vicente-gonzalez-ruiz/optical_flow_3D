@@ -8,6 +8,36 @@ import cupyx.scipy.ndimage  # for filters
 from numba import cuda
 import numpy.typing as npt
 
+@njit(parallel=True)
+def inverse(xmap, ymap, zmap, xmin=0, ymin=0, zmin=0, dist_threshold=1, eps=1e-12):
+    shape = xmap.shape
+    inverse_x = np.zeros_like(xmap)
+    inverse_y = np.zeros_like(xmap)
+    inverse_z = np.zeros_like(xmap)
+    distance_total = np.zeros_like(xmap)
+
+    for i in prange(shape[0]):
+        for j in range(shape[1]):
+            for k in range(shape[2]):
+                idz = np.int32(np.round(i + zmap[i, j, k]))
+                idy = np.int32(np.round(j + ymap[i, j, k]))
+                idx = np.int32(np.round(k + xmap[i, j, k]))
+
+                for zval in range(max(idz - dist_threshold, zmin), min(idz + dist_threshold, zmin + shape[0])):
+                    for yval in range(max(idy - dist_threshold, ymin), min(idy + dist_threshold, ymin + shape[1])):
+                        for xval in range(max(idx - dist_threshold, xmin),
+                                          min(idx + dist_threshold, xmin + shape[2])):
+                            distance = (zval - (i + zmap[i, j, k])) ** 2 + (yval - (j + ymap[i, j, k])) ** 2 + (
+                                        xval - (k + xmap[i, j, k])) ** 2
+                            inverse_distance = 1 / (distance + eps)
+
+                            inverse_z[zval, yval, xval] += inverse_distance * i
+                            inverse_y[zval, yval, xval] += inverse_distance * j
+                            inverse_x[zval, yval, xval] += inverse_distance * k
+                            distance_total[zval, yval, xval] += inverse_distance
+
+    return inverse_x, inverse_y, inverse_z, distance_total
+
 def generate_inverse_image(image, vx, vy, vz, use_gpu: bool = True) -> np.ndarray:
     """ Uses the displacements to transform the image
 
