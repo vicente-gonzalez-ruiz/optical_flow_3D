@@ -7,6 +7,7 @@ from tqdm import tqdm
 import cupyx.scipy.ndimage  # for filters
 from numba import cuda
 import numpy.typing as npt
+from numba import njit
 
 @njit(parallel=True)
 def inverse(xmap, ymap, zmap, xmin=0, ymin=0, zmin=0, dist_threshold=1, eps=1e-12):
