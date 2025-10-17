@@ -1,0 +1,4 @@
+# Probably you might need cupy-cuda12x, however, this depends on your CUDA version. Check this with "nvcc --version", and check that the nvcc version matches the version of the used GPU driver (use nvidia-smi).
+numpy
+numba
+

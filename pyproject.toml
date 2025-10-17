@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling", "setuptools", "setuptools-scm"]
+#build-backend = "hatchling.build"
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "optical_flow_3D"
+version = "0.0.1"
+authors = [
+  { name="Vicente González Ruiz", email="vicente.gonzalez.ruiz@gmail.com" },
+]
+description = "Estimation of the optical flow in 3D vols"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.urls]
+"Homepage" = "https://github.com/vicente-gonzalez-ruiz/optical_flow_3D"
+"Bug Tracker" = "https://github.com/vicente-gonzalez-ruiz/optical_flow_3D/issues"
