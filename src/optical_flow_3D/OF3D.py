@@ -40,7 +40,7 @@ def inverse(xmap, ymap, zmap, xmin=0, ymin=0, zmin=0, dist_threshold=1, eps=1e-1
 
     return inverse_x, inverse_y, inverse_z, distance_total
 
-def generate_inverse_image(image, vx, vy, vz, use_gpu: bool = True) -> np.ndarray:
+def generate_inverse_image(image, vx, vy, vz, use_gpu: bool = True, device_id: int = 0) -> np.ndarray:
     """ Uses the displacements to transform the image
 
     This transformed image can then be overlaid over the actual image to verify the quality of the displacements.
@@ -63,10 +63,12 @@ def generate_inverse_image(image, vx, vy, vz, use_gpu: bool = True) -> np.ndarra
     map_z_inverse = map_z_inverse / (distance_total + 1e-12)
 
     if use_gpu:
-        inverse_image_gpu = cupyx.scipy.ndimage.map_coordinates(cp.asarray(image),
-                                                                cp.array([map_z_inverse, map_y_inverse, map_x_inverse]),
-                                                                mode="mirror")
-        inverse_image = inverse_image_gpu.get()
+        with cp.cuda.Device(device_id):
+            inverse_image_gpu = cupyx.scipy.ndimage.map_coordinates(
+                cp.asarray(image),
+                cp.array([map_z_inverse, map_y_inverse, map_x_inverse]),
+                mode="mirror")
+            inverse_image = inverse_image_gpu.get()
     else:
         inverse_image = scipy.ndimage.map_coordinates(image,
                                                       np.array([map_z_inverse, map_y_inverse, map_x_inverse]),
