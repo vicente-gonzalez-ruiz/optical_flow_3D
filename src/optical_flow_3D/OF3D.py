@@ -350,7 +350,8 @@ def update_matrices(b1_0, b1_1, b1_2, a1_00, a1_01, a1_02, a1_11, a1_12, a1_22,
     z, y, x = cuda.grid(3)
 
     #r = cuda.local.array(shape=(9,), dtype=np.float32)
-    r = cuda.local.array(9, float32)
+    #r = cuda.local.array(9, float32)
+    r = cuda.local.array(shape=(9,), dtype=float32)
     for j in range(9):
         r[j] = 0.0
 
