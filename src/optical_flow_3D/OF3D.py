@@ -487,12 +487,27 @@ def update_matrices(b1_0, b1_1, b1_2, a1_00, a1_01, a1_02, a1_11, a1_12, a1_22,
 
         r[2] = (b1_2[z, y, x] - r[2]) * 0.5 + (r[5] * dx + r[7] * dy + r[8] * dz)
 
-        scale = border[min(x, border_size)] * \
-                border[min(y, border_size)] * \
-                border[min(z, border_size)] * \
-                border[min(width - x - 1, border_size)] * \
-                border[min(length - y - 1, border_size)] * \
-                border[min(depth - z - 1, border_size)]
+        # 1. Compute clamped indices using ternary operators to bypass Numba's min() bug
+        idx_x = x if x < border_size else border_size
+        idx_y = y if y < border_size else border_size
+        idx_z = z if z < border_size else border_size
+
+        inv_x = width - x - 1
+        idx_inv_x = inv_x if inv_x < border_size else border_size
+
+        inv_y = length - y - 1
+        idx_inv_y = inv_y if inv_y < border_size else border_size
+
+        inv_z = depth - z - 1
+        idx_inv_z = inv_z if inv_z < border_size else border_size
+
+        # 2. Calculate scale safely
+        scale = border[idx_x] * \
+                border[idx_y] * \
+                border[idx_z] * \
+                border[idx_inv_x] * \
+                border[idx_inv_y] * \
+                border[idx_inv_z]
 
         for j in range(9):
             r[j] = r[j] * scale
